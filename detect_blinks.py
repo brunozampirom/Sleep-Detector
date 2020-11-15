@@ -3,12 +3,16 @@ from scipy.spatial import distance as dist
 from imutils.video import FileVideoStream
 from imutils.video import VideoStream
 from imutils import face_utils
+from pygame import mixer  # Load the popular external library
 import numpy as np
 import argparse
 import imutils
 import time
 import dlib
 import cv2
+import os
+
+dirname = os.path.dirname(__file__)
 
 def eye_aspect_ratio(eye):
 	# compute the euclidean distances between the two sets of
@@ -32,11 +36,12 @@ args = vars(ap.parse_args())
 # define two constants, one for the eye aspect ratio to indicate
 # blink and then a second constant for the number of consecutive
 # frames the eye must be below the threshold
-EYE_AR_THRESH = 0.2
-EYE_AR_CONSEC_FRAMES = 60
+EYE_AR_THRESH = 0.21
+EYE_AR_CONSEC_FRAMES = 30
 # initialize the frame counters and the total number of blinks
 COUNTER = 0
 TOTAL = 0
+SLEEPING = False
 
 # initialize dlib's face detector (HOG-based) and then create
 # the facial landmark predictor
@@ -49,6 +54,10 @@ predictor = dlib.shape_predictor(args["shape_predictor"])
 (lStart, lEnd) = face_utils.FACIAL_LANDMARKS_IDXS["left_eye"]
 (rStart, rEnd) = face_utils.FACIAL_LANDMARKS_IDXS["right_eye"]
 
+# music player initialization
+mixer.init()
+filename = os.path.join(dirname, 'alarm.mp3')
+mixer.music.load(filename)
 # start the video stream thread
 print("[INFO] starting video stream thread...")
 # vs = FileVideoStream(args["video"]).start()
@@ -66,7 +75,7 @@ while True:
 	# it, and convert it to grayscale
 	# channels)
 	frame = vs.read()
-	frame = imutils.resize(frame, width=450)
+	frame = imutils.resize(frame, width=720)
 	gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 	# detect faces in the grayscale frame
 	rects = detector(gray, 0)
@@ -93,23 +102,35 @@ while True:
 		cv2.drawContours(frame, [rightEyeHull], -1, (0, 255, 0), 1)
 		# check to see if the eye aspect ratio is below the blink
 		# threshold, and if so, increment the blink frame counter
+		ear_color = (0, 0, 255)	
+		sleeping_color = (0, 0, 255)
 		if ear < EYE_AR_THRESH:
+			ear_color = (0, 255, 0)
 			COUNTER += 1
-		# otherwise, the eye aspect ratio is not below the blink
-		# threshold
 		else:
-			# if the eyes were closed for a sufficient number of
-			# then increment the total number of blinks
-			if COUNTER >= EYE_AR_CONSEC_FRAMES:
-				TOTAL += 1
-			# reset the eye frame counter
 			COUNTER = 0
-		# draw the total number of blinks on the frame along with
-		# the computed eye aspect ratio for the frame
-		cv2.putText(frame, "Naps: {}".format(TOTAL), (10, 30),
+			SLEEPING = False
+
+		if COUNTER >= EYE_AR_CONSEC_FRAMES:
+			SLEEPING = True
+			TOTAL += 1
+			COUNTER = 0
+		# If spleeping is ture, play alert sound 
+		if SLEEPING:
+			sleeping_color = (0, 255, 0)
+			if mixer.music.get_busy() == False:
+				mixer.music.play()
+			else:
+				mixer.music.unpause()
+		else:
+			mixer.music.pause()
+
+		cv2.putText(frame, "Sleeping: {}".format(SLEEPING), (10, 30),
+			cv2.FONT_HERSHEY_SIMPLEX, 0.7, sleeping_color, 2)
+		cv2.putText(frame, "Total sleeps: {}".format(TOTAL), (300, 30),
 			cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-		cv2.putText(frame, "EAR: {:.2f}".format(ear), (300, 30),
-			cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+		cv2.putText(frame, "EAR: {:.2f}".format(ear), (590, 30),
+			cv2.FONT_HERSHEY_SIMPLEX, 0.7, ear_color, 2)
  
 	# show the frame
 	cv2.imshow("Frame", frame)
