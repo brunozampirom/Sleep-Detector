@@ -7,7 +7,7 @@ The algorithm consists of using computer vision to detect drowsiness. The algori
 ### Installing and running
 ```
 pip install -r requirement.txt
-python detect_drowsiness.py  --shape-predictor shape_predictor_68_face_landmarks.dat
+python sleep_detector.py  --shape-predictor shape_predictor_68_face_landmarks.dat
 ```
 
 ### Inspiration
