@@ -36,8 +36,8 @@ args = vars(ap.parse_args())
 # define two constants, one for the eye aspect ratio to indicate
 # blink and then a second constant for the number of consecutive
 # frames the eye must be below the threshold
-EYE_AR_THRESH = 0.21
-EYE_AR_CONSEC_FRAMES = 30
+EYE_AR_THRESH = 0.25
+EYE_AR_CONSEC_FRAMES = 25
 # initialize the frame counters and the total number of blinks
 COUNTER = 0
 TOTAL = 0
@@ -75,7 +75,8 @@ while True:
 	# it, and convert it to grayscale
 	# channels)
 	frame = vs.read()
-	frame = imutils.resize(frame, width=720)
+	frame = imutils.resize(frame, width=1024)
+	frame = cv2.flip(frame, 1)
 	gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 	# detect faces in the grayscale frame
 	rects = detector(gray, 0)
