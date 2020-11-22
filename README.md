@@ -1,5 +1,7 @@
 # Sleep Detector
  A sleep detection algorithm with OpenCV, Python, and dlib
+ 
+![](https://media.giphy.com/media/7iDZr85yaSE3aSmYbD/giphy.gif/200w.webp)
 
 ### Motivation
 The algorithm consists of using computer vision to detect drowsiness. The algorithm could be used to detect drowsiness in drivers, in order to prevent accidents caused by the driver.
